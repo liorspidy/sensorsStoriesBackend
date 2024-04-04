@@ -25,11 +25,10 @@ const getLists = async (req, res) => {
       },
     });
 
-    res.status(response.status).json(response.data);
-    console.log("lists:" + response.data);
+    return res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error fetching lists:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -47,44 +46,45 @@ const getSubscribers = async (req, res) => {
       }
     );
 
-    res.status(response.status).json(response.data);
-    console.log("subscribers:" + response.data);
+    return res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error fetching subscribers:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 const addSubscriber = async (req, res) => {
-    try {
-      const authHeader = generateAuthHeader();
-      const listId = req.params.listId;
-      const { name, email, phone } = req.body; // Destructure name, email, phone from req.body
-  
-      const subscriber = {
-        NAME: name, 
-        EMAIL: email, 
-        PHONE: phone, 
-        STATUS: 1,
-        PHONE_IGNORE: 0,
-      };
-  
-      const response = await axios.post(
-        `http://api.responder.co.il/main/lists/${listId}/subscribers`,
-        JSON.stringify(subscriber),
-        {
-          headers: {
-            Authorization: authHeader,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-  
-      res.status(response.status).json(response.data);
-      console.log("Subscriber added:", response.data);
-    } catch (error) {
-      console.error("Error adding subscriber:", error.message);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  };
+  try {
+    const authHeader = generateAuthHeader();
+    const listId = req.params.listId;
+    const { name, email, phone } = req.body;
+
+    const subscriber = JSON.stringify([
+      {
+        NAME: name,
+        EMAIL: email,
+        PHONE: phone,
+        NOTIFY: 2,
+      },
+    ]);
+
+    const response = await axios.post(
+      `http://api.responder.co.il/main/lists/${listId}/subscribers`,
+      {
+        subscribers: subscriber,
+      },
+      {
+        headers: {
+          Authorization: authHeader,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    return res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error adding subscriber:", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 module.exports = { getLists, getSubscribers, addSubscriber };
